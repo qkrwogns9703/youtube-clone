@@ -1,29 +1,49 @@
 import React, { useEffect, useState } from 'react';
-import './app.css';
+import styles from './app.module.css';
 import VideoList from './components/videoList/videoList';
+import NavBar from './components/navBar/navBar';
+import VideoDetail from './components/videoDetail/videoDetail';
 
-function App() {
+function App({ youtube }) {
 	const [videos, setVideos] = useState([]);
+	const [selectedVideo, setSelectedVideo] = useState(null);
 	useEffect(() => {
-		console.log('데이터 불러오기~!');
-		const requestOptions = {
-			method: 'GET',
-			redirect: 'follow',
-		};
-
-		fetch(
-			'https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&maxResults=25&key=AIzaSyBkUOOY1I9RlKkVT9_WjJzZEIUfAa1dF44',
-			requestOptions
-		)
-			.then(response => response.json())
-			.then(result => {
-				setVideos(result.items);
-				console.log(result.items);
-			})
-
-			.catch(error => console.log('error', error));
+		youtube.mostPopular(data => {
+			setVideos(data);
+		});
 	}, []);
-	return <VideoList videos={videos} />;
+
+	const selectVideo = video => {
+		console.log(video);
+		setSelectedVideo(video);
+	};
+
+	const handleSearch = query => {
+		youtube.search(query, data => {
+			setVideos(data);
+		});
+		setSelectedVideo(null);
+	};
+
+	return (
+		<div className={styles.app}>
+			<NavBar handleSearch={handleSearch} />
+			<section className={styles.content}>
+				{selectedVideo && (
+					<div className={styles.detail}>
+						<VideoDetail video={selectedVideo} />
+					</div>
+				)}
+				<div className={styles.list}>
+					<VideoList
+						videos={videos}
+						onVideoClick={selectVideo}
+						display={selectedVideo ? 'list' : 'grid'}
+					/>
+				</div>
+			</section>
+		</div>
+	);
 }
 
 export default App;
